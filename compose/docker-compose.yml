@@ -1,0 +1,45 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: local_secure_db
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      # Montamos el init.sql para que cree la tabla notes automáticamente
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - internal
+    restart: unless-stopped
+    mem_limit: "512m"
+    cpus: "0.5"
+
+  api:
+    # Aquí Esau pondrá su Dockerfile en ./api
+    build:
+      context: ./api
+    container_name: local_secure_api
+    depends_on:
+      - db
+    environment:
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
+      DB_NAME: ${DB_NAME}
+      DB_HOST: ${DB_HOST}
+    ports:
+      - "8000:8000"
+    networks:
+      - internal
+    restart: unless-stopped
+    mem_limit: "512m"
+    cpus: "0.5"
+
+networks:
+  internal:
+
+volumes:
+  db_data:
