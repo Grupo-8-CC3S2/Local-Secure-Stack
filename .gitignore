@@ -2,3 +2,18 @@
 app.db
 __pycache__/
 *.pyc
+
+# No subir archivos de entorno reales
+compose/.env
+.env
+
+# Carpetas de Python / Cache
+__pycache__/
+*.pyc
+
+# Archivos generados por Docker
+*.log
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
