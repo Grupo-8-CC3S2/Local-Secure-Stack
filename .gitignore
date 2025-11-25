@@ -1,1 +1,4 @@
 .venv_pc4
+app.db
+__pycache__/
+*.pyc

@@ -118,3 +118,27 @@ esau@DESKTOP-A3RPEKP:~/Local-Secure-Stack$ curl -X GET http://127.0.0.1:8000/api
 {"status":200}
 ```
 Esta respuesta es la que se construye en **return RespuestaSalud(status=200)** en el endpoint de api.py precisamente
+
+Ahora lo que se precisa es un .sh para la ejecucion automatizada del chequeo de salud
+una funcion sencilla con un comando de sustitucion que ejecuta **curl** ,la salida es asignada a la variable bash **RESPUESTA**
+```bash
+curl -s -X POST http://127.0.0.1:8000/api/salud/ -H "Content-Type: application/json" -d '{"peticion":"123"}'
+```
+En apy.py se ha definido el modelo para las solicitudes , mediante **SolicitudSalud(BaseModel)** se espera un diccionario en formato JSON **{"peticion":"123sdsdsdd"}** y es el valor de **peticion** el insumo para la creacion del nombre de nuestro nuevo recurso via **logica.verificar_salud(nombre=request.peticion)** donde request es el argumento para la funcion **checkeo_salud**mediante **checkeo_salud(request:SolicitudSalud)->RespuestaSalud:**. Entonces es preciso que el valor de esa clave peticion sea distinto , de modo que 
+```bash
+conexion.execute("""
+            CREATE TABLE IF NOT EXISTS items (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL UNIQUE,
+                description TEXT,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+            """)
+```
+Cree recursos con nombres distintos , tal como se espera.Esto al ser invocados desde crear_recurso mediante **insertador.execute("INSERT INTO items (name, description) VALUES (?, ?)",(name, description))**.
+La ejecucion  del .sh se realiza del modo siguiente:
+```bash
+esau@DESKTOP-A3RPEKP:~/Local-Secure-Stack$ bash scripts/test-stack.sh
+checkeo de salud
+Respuesta de la API: {"status":200}
+```

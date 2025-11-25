@@ -21,8 +21,8 @@ def establecer_conexion():
         yield conexion
     finally:
         conexion.close()
-
-def crear_recurso(name="recurso",description=None):
+ 
+def crear_recurso(name,description=None):
     with establecer_conexion() as conexion:
         insertador = conexion.cursor()
         insertador.execute("INSERT INTO items (name, description) VALUES (?, ?)",

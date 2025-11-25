@@ -5,17 +5,17 @@ from services import logica
 ruta_salud = APIRouter(prefix = "/api/salud",tags=["salud"])
 
 class SolicitudSalud(BaseModel):
-    peticion:Optional[str]=Field(None )
+    peticion:str=Field(...)
 class RespuestaSalud(BaseModel):
     status:int=Field(...)
-@ruta_salud.get(
+@ruta_salud.post(
     "/",
     response_model=RespuestaSalud,
     status_code=status.HTTP_200_OK,
     summary="check salud")
-def checkeo_salud()->RespuestaSalud:
+def checkeo_salud(request:SolicitudSalud)->RespuestaSalud:
     try:
-        resultado = logica.verificar_salud()
+        resultado = logica.verificar_salud(nombre=request.peticion)
         print(resultado)
         return RespuestaSalud(status=200)
     except Exception as e:
