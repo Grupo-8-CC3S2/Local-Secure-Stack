@@ -2,6 +2,7 @@ from fastapi import FastAPI
 import uvicorn
 
 from api.api import ruta_salud
+from services.data import iniciar_db
 
 def crear_app_fastapi()->FastAPI:
     app = FastAPI()
@@ -9,6 +10,7 @@ def crear_app_fastapi()->FastAPI:
     @app.on_event("startup")
     def prepara_inicio():
         print("antes de que inicie")
+        iniciar_db()
     @app.on_event("shutdown")
     def prepara_finalizacion():
         print("limpieza antes de la detencion")
