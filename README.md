@@ -1,9 +1,113 @@
-# Proyecto 2 :  "Local Secure Stack" 
+# Local Secure Stack
+
+Sistema de gestión de notas con API REST y base de datos PostgreSQL, desplegado mediante Docker Compose con prácticas DevSecOps.
+
 El presente proyecto ha de ejecutarse localmente ; pero se diseña de tal modo, que el conjunto de servicios que se levanten via docker-compose sea reproducible.<br>
-Desde luego, la seguridad se integra en "todas las capas" , desde el uso de **imagenes minimas y tags inmutables por imagen** , pasando por la gestión de secretos mediante .env -que el daemon de docker lerá para expandir los valores de las variables al ejecutar docker-compose up- hasta el **endurecimiento de red** -que evita la exposicion de la base de datos fuera de nuestro entorno.Ademas se definen **politicas de servicio** en el docker-compose, mediante los atributos **networks, restart,deploy** ,etc dentro del bloque **services** para cada servicio de interés.      
+Desde luego, la seguridad se integra en "todas las capas" , desde el uso de **imagenes minimas y tags inmutables por imagen** , pasando por la gestión de secretos mediante .env -que el daemon de docker leerá para expandir los valores de las variables al ejecutar docker-compose up- hasta el **endurecimiento de red** -que evita la exposicion de la base de datos fuera de nuestro entorno.Ademas se definen **politicas de servicio** en el docker-compose, mediante los atributos **networks, restart,deploy** ,etc dentro del bloque **services** para cada servicio de interés.      
 
 ## Contexto
-Un pequeño "servicio de notas" (API + DB) que se despliega con compose y se endurece a nivel de redes , recursos y secretos
+Un pequeño "servicio de notas" (API + DB) que se despliega con compose y se endurece a nivel de redes , recursos y secretos.
+=======
+## Requisitos Previos
+
+- **Docker:** >= 20.10
+- **Docker Compose:** >= 2.0
+- **Python3:** >= 3.13
+- **Puertos libres:** 8000 (API). 
+
+`Mejora pendiente:` Soporte para puerto configurable mediante variables de entorno para la API.
+
+Valida tu entorno con `make check`
+
+## Inicio rápido
+
+```bash
+# 1. Clonar repositorio
+git clone https://github.com/Grupo-8-CC3S2/Local-Secure-Stack.git
+cd Local-Secure-Stack
+# 2. Configurar variables de entorno
+cp compose/.env.example compose/.env
+# Edita compose/.env con tus credenciales
+# 3. Levantar stack
+make dev
+# 4. Esperar ~15 segundos y probar
+make test
+# 5. Ver logs
+make logs
+# 6. Apagar todo
+make clean
+```
+
+## Estructura del Proyecto
+
+```
+Local-Secure-Stack/
+├── api/                   # Código de la API
+│   ├── main.py            # Punto de entrada
+│   ├── api.py             # Endpoints
+│   ├── requirements.txt   # Dependencias
+│   ├── Dockerfile         # Imagen de la API
+│   └── services/
+│       ├── data.py        # Acceso a PostgreSQL
+│       └── logica.py      # Lógica de negocio
+├── db/
+│   └── init.sql           # Schema inicial de DB
+├── compose/
+│   ├── docker-compose.yml # Orquestación de servicios
+│   └── .env.example       # Template de variables
+├── scripts/
+│   ├── up.sh              # Levanta stack
+│   ├── down.sh            # Apaga stack
+│   └── test-stack.sh      # Pruebas automatizadas
+├── docs/                  # Documentación técnica
+│   ├── vision.md
+│   ├── definition-of-done.md
+│   ├── sprint-backlog-s1.md
+│   ├── metrics.md
+│   └── risk-register.md
+├── Makefile               # Comandos principales
+├── .gitignore
+└── README.md
+```
+
+## Comandos Disponibles
+
+```bash
+make help       # Muestra todos los comandos
+make dev        # Levanta el stack
+make test       # Ejecuta pruebas
+make logs       # Ver logs en tiempo real
+make status     # Estado de contenedores
+make clean      # Apaga y limpia todo
+make restart    # Reinicia servicios
+```
+
+## Testing
+
+```bash
+# Prueba manual. Respuesta esperada: {"status":200}
+curl -X POST http://localhost:8000/api/salud/ \
+  -H "Content-Type: application/json" \
+  -d '{"peticion":"test-manual"}'
+
+# Pruebas automatizadas
+make test
+```
+
+## Recolección de Métricas
+
+```bash
+# Configure su entorno virtual
+# Instale:
+pip install requests
+# Ejecución básica
+python3 scripts/recopilar_metricas.py
+# Con archivo de salida personalizado
+python3 scripts/recopilar_metricas.py --output metrics-output123.json
+# Incluyendo métricas de arranque (reinicia servicios)
+python3 scripts/recopilar_metricas.py --arranque
+```
+
 
 ## Sprint 1 : API PYTHON + VISION + DEFINITION OF DONE
 Antes que nada veamos en que consiste una API
@@ -142,3 +246,38 @@ esau@DESKTOP-A3RPEKP:~/Local-Secure-Stack$ bash scripts/test-stack.sh
 checkeo de salud
 Respuesta de la API: {"status":200}
 ```
+
+
+## Sprint 2: API COMPLETA 
+Tanto el arbol de archivos como data.py sufrieron modificaciones, que sin ser drasticas , son considerables (cosas de trabajar en equipo) . Sin embargo se obtuvo una migracion exitosa de sqlite a Postgres , asimismo se logro integrar api a docker-compose, esto es , se logro contenerizar nuestra API. Detallemos brevemente las modificaciones substanciales.<br>
+En data.py se obtienen las variables desde docker-compose, aquellas con las cuales tendremos acceso a la base de datos, desde luego luego de crear el **.env** en el directorio de docker-compose; iniciar_db() se ajusta a la logica postgres , ahora se usa **psycopg2** para establecer la conexion. Asimismo **establecer_conexion()** se ajusta a la misma logica , en particular el uso de ** config , este diccionario representa los vlaores de las variables de entorno con cuyas claves se pedira acceso a la tabla postgres, entonces  
+```bash
+ psycopg2.connect(**config) 
+```
+valida y obtiene acceso . **Crear_recurso()** sufre una mejora respecto al anterior codigo  se otorga a cursor el poder ser context manager(tener un __exit__) de modo que pueda finalizarse si hay algun error. La insercion de un nuevo elemento sigue la logica anterior.
+
+Detallado ello, precisemos lo abarcado en el sprint 2(hasta el momento) , se completa el CRUD de notas con la adicion de una nueva ruta **ruta_notas = APIRouter(/notes,...)** y sus endpoints asociados, **@ruta_notas.post("/") def crear_nota()** se recibe la peticion del cliente que debe seguir formato definido por el modelo pydantic (schema). Luego , el flujo es conocido, la peticion viaja a logica.py y finalmente a data.py ,donde se ejecuta **crear_recurso** con el establecimiento de la conexion y la escritura de la nueva linea en la tabla. Una vez obtenido la respuesta se devuelve el recurso al cliente, otra vez, en el formato **NotaSalida** modelo pydantic definido. Listar_notas, obtener_una_nota y eliminar_una_nota siguen este estilo.
+La ejecucion se realiza del modo siguiente
+```bash
+pip install -r requirements.txt
+lsof -i :8080
+#matar el proceso de ser necesario
+#kill -9 <PID>
+docker compose up --build
+#crear_nota
+curl -X POST http://localhost:8000/notes/ -H "Content-Type: application/json" -d '{"titulo": "Mi nota", "contenido": "Cclearontenido de prueba"}'
+#listar notas
+curl http://localhost:8000/notes/
+#eliminar una nota
+curl -X DELETE http://localhost:8000/notes/1
+```
+Ahora vamos a simplificar la ejecucion , sera el test-stack.sh quien se encargue de realizar las peticiones , cada una en una funcion. **check_salud_puro** para el chequeo de salud (cabe mencionar quee check_salud mas que verificar la salud, realiza una peticion POST para modificar la tabla, se hizo aquello con el impetu de probar el flujo API creado) , **insertar_nota** agrega una fila a la tabla y **listar_notas** hace otro tanto.
+
+Se usa una variable de bash el cual recibe las salias de las sustituciones, esto es a saber, las repsuestas de las peticiones via cliente curl.Un punto interesante es el uso de **jq** un procesador JSON para nuestra linea de comandos, nos mostrara formato json pero en terminal.Algunas opcines usadas **-r .id** devuelve el valor sin comillas del campo id y **.** toma la toda la entrada.
+Las tres funciones son invocadas al ejecutar **bash scripts/test-stack.sh**
+
+Las salidas son las esperadas, ahora se añaden algunas metricas , estas seran asignadas a **PASS** para verificar si status_code es 200 y **TIEMPO** que calcula el tiempo consumido para una solicitud en particular.
+```bash
+INICIO=$(date +%s%3N) ,FIN=$(date +%s%3N) ,TIEMPO=$((FIN-INICIO))
+```
+Del mismo modo para PASS ,esta será false o true de acuerdo al valor que asume RESPUESTA = peticion GET al punto de salud

@@ -5,8 +5,7 @@ import psycopg2
 from contextlib import contextmanager
 from typing import Optional, Dict
 
-def get_db_config() -> Dict[str, str]:
-    # Obtiene configuración de conexión desde variables de entorno
+def get_db_config() -> Dict[str, str]: 
     return {
         'host': os.getenv('DB_HOST', 'db'),
         'database': os.getenv('DB_NAME'),
@@ -15,8 +14,7 @@ def get_db_config() -> Dict[str, str]:
         'port': os.getenv('DB_PORT', '5432')
     }
 
-def iniciar_db() -> None:
-    # Verifica que la conexión a PostgreSQL funciona. Lanza excepción si no puede conectar.
+def iniciar_db() -> None: 
     try:
         config = get_db_config()
         with psycopg2.connect(**config) as conn:
@@ -35,17 +33,15 @@ def iniciar_db() -> None:
         raise
 
 @contextmanager
-def establecer_conexion():
-    # Context manager para conexiones a PostgreSQL
+def establecer_conexion(): 
     config = get_db_config()
     conexion = psycopg2.connect(**config)
     try:
         yield conexion
     finally:
         conexion.close()
-
-def crear_recurso(name: str, description: Optional[str] = None) -> int:
-    # Inserta una nueva nota en la tabla notes 
+# modificacion sin documentacion ? , se otorga contextmanager tambien al cursor __exit__()
+def crear_recurso(name: str, description: Optional[str] = None) -> int: 
     with establecer_conexion() as conexion:
         with conexion.cursor() as cursor:
             cursor.execute(
@@ -60,3 +56,23 @@ def crear_recurso(name: str, description: Optional[str] = None) -> int:
             conexion.commit()
             print(f"- Nota creada con ID: {id_insertado}")
             return id_insertado
+
+def listar_notas():
+    with establecer_conexion() as conexion:
+        cursor = conexion.cursor()
+        cursor.execute("SELECT * FROM notes;")
+        return cursor.fetchall()
+
+def obtener_nota(id):
+    with establecer_conexion() as conexion:
+        cursor = conexion.cursor()
+        cursor.execute("SELECT * FROM notes WHERE id=%s;", (id,))
+        return cursor.fetchone()
+
+def eliminar_nota(id):
+    with establecer_conexion() as conexion:
+        cursor = conexion.cursor()
+        cursor.execute("DELETE FROM notes WHERE id=%s RETURNING id;", (id,))
+        eliminado = cursor.fetchone()
+        conexion.commit()
+        return eliminado
