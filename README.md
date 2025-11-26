@@ -171,3 +171,9 @@ Ahora vamos a simplificar la ejecucion , sera el test-stack.sh quien se encargue
 
 Se usa una variable de bash el cual recibe las salias de las sustituciones, esto es a saber, las repsuestas de las peticiones via cliente curl.Un punto interesante es el uso de **jq** un procesador JSON para nuestra linea de comandos, nos mostrara formato json pero en terminal.Algunas opcines usadas **-r .id** devuelve el valor sin comillas del campo id y **.** toma la toda la entrada.
 Las tres funciones son invocadas al ejecutar **bash scripts/test-stack.sh**
+
+Las salidas son las esperadas, ahora se añaden algunas metricas , estas seran asignadas a **PASS** para verificar si status_code es 200 y **TIEMPO** que calcula el tiempo consumido para una solicitud en particular.
+```bash
+INICIO=$(date +%s%3N) ,FIN=$(date +%s%3N) ,TIEMPO=$((FIN-INICIO))
+```
+Del mismo modo para PASS ,esta será false o true de acuerdo al valor que asume RESPUESTA = peticion GET al punto de salud
