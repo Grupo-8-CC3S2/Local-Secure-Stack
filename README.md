@@ -167,3 +167,7 @@ curl http://localhost:8000/notes/
 #eliminar una nota
 curl -X DELETE http://localhost:8000/notes/1
 ```
+Ahora vamos a simplificar la ejecucion , sera el test-stack.sh quien se encargue de realizar las peticiones , cada una en una funcion. **check_salud_puro** para el chequeo de salud (cabe mencionar quee check_salud mas que verificar la salud, realiza una peticion POST para modificar la tabla, se hizo aquello con el impetu de probar el flujo API creado) , **insertar_nota** agrega una fila a la tabla y **listar_notas** hace otro tanto.
+
+Se usa una variable de bash el cual recibe las salias de las sustituciones, esto es a saber, las repsuestas de las peticiones via cliente curl.Un punto interesante es el uso de **jq** un procesador JSON para nuestra linea de comandos, nos mostrara formato json pero en terminal.Algunas opcines usadas **-r .id** devuelve el valor sin comillas del campo id y **.** toma la toda la entrada.
+Las tres funciones son invocadas al ejecutar **bash scripts/test-stack.sh**
