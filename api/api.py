@@ -6,8 +6,10 @@ ruta_salud = APIRouter(prefix = "/api/salud",tags=["salud"])
 
 class SolicitudSalud(BaseModel):
     peticion:str=Field(...)
+
 class RespuestaSalud(BaseModel):
     status:int=Field(...)
+
 @ruta_salud.post(
     "/",
     response_model=RespuestaSalud,
@@ -23,4 +25,9 @@ def checkeo_salud(request:SolicitudSalud)->RespuestaSalud:
             status_code =500,
             detail=f"stack no saludable{e}")
         
-        
+@ruta_salud.get(
+    "/check",
+    summary="Healthcheck puro"
+)
+def healthcheck_puro():
+    return {"status": 200}

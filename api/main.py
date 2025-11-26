@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 import uvicorn
 
-from api.api import ruta_salud
+from api import ruta_salud
 from services.data import iniciar_db
 
 def crear_app_fastapi()->FastAPI:
