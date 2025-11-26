@@ -1,9 +1,109 @@
-# Proyecto 2 :  "Local Secure Stack" 
+# Local Secure Stack
+
+Sistema de gestión de notas con API REST y base de datos PostgreSQL, desplegado mediante Docker Compose con prácticas DevSecOps.
+
 El presente proyecto ha de ejecutarse localmente ; pero se diseña de tal modo, que el conjunto de servicios que se levanten via docker-compose sea reproducible.<br>
 Desde luego, la seguridad se integra en "todas las capas" , desde el uso de **imagenes minimas y tags inmutables por imagen** , pasando por la gestión de secretos mediante .env -que el daemon de docker lerá para expandir los valores de las variables al ejecutar docker-compose up- hasta el **endurecimiento de red** -que evita la exposicion de la base de datos fuera de nuestro entorno.Ademas se definen **politicas de servicio** en el docker-compose, mediante los atributos **networks, restart,deploy** ,etc dentro del bloque **services** para cada servicio de interés.      
 
-## Contexto
-Un pequeño "servicio de notas" (API + DB) que se despliega con compose y se endurece a nivel de redes , recursos y secretos
+## Requisitos Previos
+
+- **Docker:** >= 20.10
+- **Docker Compose:** >= 2.0
+- **Python3:** >= 3.13
+- **Puertos libres:** 8000 (API). 
+
+`Mejora pendiente:` Soporte para puerto configurable mediante variables de entorno para la API.
+
+Valida tu entorno con `make check`
+
+## Inicio rápido
+
+```bash
+# 1. Clonar repositorio
+git clone https://github.com/Grupo-8-CC3S2/Local-Secure-Stack.git
+cd Local-Secure-Stack
+# 2. Configurar variables de entorno
+cp compose/.env.example compose/.env
+# Edita compose/.env con tus credenciales
+# 3. Levantar stack
+make dev
+# 4. Esperar ~15 segundos y probar
+make test
+# 5. Ver logs
+make logs
+# 6. Apagar todo
+make clean
+```
+
+## Estructura del Proyecto
+
+```
+Local-Secure-Stack/
+├── api/                   # Código de la API
+│   ├── main.py            # Punto de entrada
+│   ├── api.py             # Endpoints
+│   ├── requirements.txt   # Dependencias
+│   ├── Dockerfile         # Imagen de la API
+│   └── services/
+│       ├── data.py        # Acceso a PostgreSQL
+│       └── logica.py      # Lógica de negocio
+├── db/
+│   └── init.sql           # Schema inicial de DB
+├── compose/
+│   ├── docker-compose.yml # Orquestación de servicios
+│   └── .env.example       # Template de variables
+├── scripts/
+│   ├── up.sh              # Levanta stack
+│   ├── down.sh            # Apaga stack
+│   └── test-stack.sh      # Pruebas automatizadas
+├── docs/                  # Documentación técnica
+│   ├── vision.md
+│   ├── definition-of-done.md
+│   ├── sprint-backlog-s1.md
+│   ├── metrics.md
+│   └── risk-register.md
+├── Makefile               # Comandos principales
+├── .gitignore
+└── README.md
+```
+
+## Comandos Disponibles
+
+```bash
+make help       # Muestra todos los comandos
+make dev        # Levanta el stack
+make test       # Ejecuta pruebas
+make logs       # Ver logs en tiempo real
+make status     # Estado de contenedores
+make clean      # Apaga y limpia todo
+make restart    # Reinicia servicios
+```
+
+## Testing
+
+```bash
+# Prueba manual. Respuesta esperada: {"status":200}
+curl -X POST http://localhost:8000/api/salud/ \
+  -H "Content-Type: application/json" \
+  -d '{"peticion":"test-manual"}'
+
+# Pruebas automatizadas
+make test
+```
+
+## Recolección de Métricas
+
+```bash
+# Configure su entorno virtual
+# Instale:
+pip install requests
+# Ejecución básica
+python3 scripts/recopilar_metricas.py
+# Con archivo de salida personalizado
+python3 scripts/recopilar_metricas.py --output metrics-output123.json
+# Incluyendo métricas de arranque (reinicia servicios)
+python3 scripts/recopilar_metricas.py --arranque
+```
 
 ## Sprint 1 : API PYTHON + VISION + DEFINITION OF DONE
 Antes que nada veamos en que consiste una API
