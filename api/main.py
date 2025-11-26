@@ -1,12 +1,13 @@
 from fastapi import FastAPI
 import uvicorn
 
-from api import ruta_salud
+from api import ruta_salud,ruta_notas
 from services.data import iniciar_db
 
 def crear_app_fastapi()->FastAPI:
     app = FastAPI()
     app.include_router(ruta_salud)
+    app.include_router(ruta_notas)
     @app.on_event("startup")
     def prepara_inicio():
         print("antes de que inicie")

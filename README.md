@@ -142,3 +142,28 @@ esau@DESKTOP-A3RPEKP:~/Local-Secure-Stack$ bash scripts/test-stack.sh
 checkeo de salud
 Respuesta de la API: {"status":200}
 ```
+
+
+## Sprint 2: API COMPLETA 
+Tanto el arbol de archivos como data.py sufrieron modificaciones, que sin ser drasticas , son considerables (cosas de trabajar en equipo) . Sin embargo se obtuvo una migracion exitosa de sqlite a Postgres , asimismo se logro integrar api a docker-compose, esto es , se logro contenerizar nuestra API. Detallemos brevemente las modificaciones substanciales.<br>
+En data.py se obtienen las variables desde docker-compose, aquellas con las cuales tendremos acceso a la base de datos, desde luego luego de crear el **.env** en el directorio de docker-compose; iniciar_db() se ajusta a la logica postgres , ahora se usa **psycopg2** para establecer la conexion. Asimismo **establecer_conexion()** se ajusta a la misma logica , en particular el uso de ** config , este diccionario representa los vlaores de las variables de entorno con cuyas claves se pedira acceso a la tabla postgres, entonces  
+```bash
+ psycopg2.connect(**config) 
+```
+valida y obtiene acceso . **Crear_recurso()** sufre una mejora respecto al anterior codigo  se otorga a cursor el poder ser context manager(tener un __exit__) de modo que pueda finalizarse si hay algun error. La insercion de un nuevo elemento sigue la logica anterior.
+
+Detallado ello, precisemos lo abarcado en el sprint 2(hasta el momento) , se completa el CRUD de notas con la adicion de una nueva ruta **ruta_notas = APIRouter(/notes,...)** y sus endpoints asociados, **@ruta_notas.post("/") def crear_nota()** se recibe la peticion del cliente que debe seguir formato definido por el modelo pydantic (schema). Luego , el flujo es conocido, la peticion viaja a logica.py y finalmente a data.py ,donde se ejecuta **crear_recurso** con el establecimiento de la conexion y la escritura de la nueva linea en la tabla. Una vez obtenido la respuesta se devuelve el recurso al cliente, otra vez, en el formato **NotaSalida** modelo pydantic definido. Listar_notas, obtener_una_nota y eliminar_una_nota siguen este estilo.
+La ejecucion se realiza del modo siguiente
+```bash
+pip install -r requirements.txt
+lsof -i :8080
+#matar el proceso de ser necesario
+#kill -9 <PID>
+docker compose up --build
+#crear_nota
+curl -X POST http://localhost:8000/notes/ -H "Content-Type: application/json" -d '{"titulo": "Mi nota", "contenido": "Cclearontenido de prueba"}'
+#listar notas
+curl http://localhost:8000/notes/
+#eliminar una nota
+curl -X DELETE http://localhost:8000/notes/1
+```
