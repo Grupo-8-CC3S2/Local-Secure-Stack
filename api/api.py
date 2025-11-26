@@ -2,7 +2,9 @@ from fastapi import HTTPException,status,APIRouter
 from pydantic  import BaseModel,Field
 from typing import Optional
 from services import logica
+
 ruta_salud = APIRouter(prefix = "/api/salud",tags=["salud"])
+ruta_notas = APIRouter(prefix = "/notes", tags=["notas"])
 
 class SolicitudSalud(BaseModel):
     peticion:str=Field(...)
